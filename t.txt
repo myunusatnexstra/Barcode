@@ -1,0 +1,120 @@
+	            using (SqlConnection connection = new SqlConnection(ConnectionString))
+                    {
+                        connection.Open();
+                        string sql = "exec putInvoicenewa2 @RowID,@YourCompany ,@WSGRRefnumber ,@YourRefnumber ,@YourInvoiceNumber ,";
+                        sql = sql + " @InvoiceAmount ,@Status ,@UserID,@Currency,@Docname ,@DocType ,@Attorney,@Attorneys,@ApplicationNo,@InvoiceDate,@AppAtty,@AgentID,@USDAmount, @Contents ";
+                        using (SqlCommand command = new SqlCommand(sql, connection))
+                        {
+                            SqlParameter RowID = new SqlParameter("@RowID", SqlDbType.BigInt);
+                            SqlParameter YourCompany = new SqlParameter("@YourCompany", SqlDbType.VarChar, df.YourCompany.Length);
+                            SqlParameter WSGRRefnumber = new SqlParameter("@WSGRRefnumber", SqlDbType.VarChar, df.WSGRRefnumber.Length);
+                           
+                            SqlParameter YourRefnumber = new SqlParameter("@YourRefnumber", SqlDbType.VarChar, df.YourRefnumber.Length);
+                            
+                            SqlParameter YourInvoiceNumber = new SqlParameter("@YourInvoiceNumber", SqlDbType.VarChar, df.YourInvoiceNumber.Length);
+                           
+                            SqlParameter InvoiceAmount = new SqlParameter("@InvoiceAmount", SqlDbType.Money);
+                            SqlParameter Status = new SqlParameter("@Status", SqlDbType.VarChar, df.Status.Length);
+                            SqlParameter UserIDParam = new SqlParameter("@UserID", SqlDbType.VarChar, UserID.Length);
+                            SqlParameter ApplicationNo = new SqlParameter("@ApplicationNo", SqlDbType.VarChar, df.ApplicationNo.Length);
+                            SqlParameter InvoiceDate = new SqlParameter("@InvoiceDate", SqlDbType.DateTime);
+                            SqlParameter AppAtty = new SqlParameter("@AppAtty", SqlDbType.VarChar, df.AppAtty.Length);
+                            SqlParameter AgentID = new SqlParameter("@AgentID", SqlDbType.VarChar, df.AgentID.Length);
+                            SqlParameter USDAmount = new SqlParameter("@USDAmount", SqlDbType.Money);
+                            AgentID.Value = df.AgentID;
+                            SqlParameter DocName;
+                            SqlParameter DocType;
+                         
+
+                            if (FileAttached)
+                            {
+                                byte[] filebytes = System.IO.File.ReadAllBytes(path);
+                                DocName = new SqlParameter("@DocName", SqlDbType.VarChar, fileName.Length);
+                                DocType = new SqlParameter("@DocType", SqlDbType.VarChar, 3);
+                                Contents = new SqlParameter("@Contents", SqlDbType.Image, filebytes.Length);
+                            }
+                            else
+                            {
+                                DocName = new SqlParameter("@DocName", SqlDbType.VarChar, 0);
+                                DocType = new SqlParameter("@DocType", SqlDbType.VarChar, 0);
+                                Contents = new SqlParameter("@Contents", SqlDbType.Image, 0);
+                            }
+                            Currency = new SqlParameter("@Currency", SqlDbType.VarChar, df.Currency.Length);
+                            Attorney = new SqlParameter("@Attorney", SqlDbType.VarChar, df.Attorney.Length);
+                            Attorneys = new SqlParameter("@Attorneys", SqlDbType.VarChar, df.Attorneys.Length + 2);
+                            Attorney.Value = df.Attorney;
+                            Attorneys.Value = df.Attorneys;
+                            Currency.Value = df.Currency;
+                            
+
+                             Sqldebug = Sqldebug + "," + AddField("DocName", "test", "text");
+                             Sqldebug = Sqldebug + "," + AddField("DocType", "PDF", "text");
+                             Sqldebug = Sqldebug + "," + AddField("Attorney", df.Attorney, "text");
+                             Sqldebug = Sqldebug + "," + AddField("Attorneys", df.Attorneys, "text");
+                             
+                          
+                            Status.Value = df.Status;
+                            UserIDParam.Value = UserID;
+                            ApplicationNo.Value = df.ApplicationNo;
+                            InvoiceDate.Value = df.InvoiceDate;
+                            AppAtty.Value = df.AppAtty;
+                            if (FileAttached)
+                            {
+                                DocName.Value = fileName;
+                                DocType.Value = path.Substring(fileName.Length - 3, 4);
+                                Contents.Value = System.IO.File.ReadAllBytes(path);
+                            }
+                            else
+                            {
+                                DocName.Value = DBNull.Value;
+                                DocType.Value = DBNull.Value;
+                                Contents.Value = DBNull.Value;
+                            }
+                            command.Parameters.Add(RowID);
+                            command.Parameters.Add(YourCompany);
+                            command.Parameters.Add(WSGRRefnumber);
+                            command.Parameters.Add(YourRefnumber);
+                           
+
+                            SqlDataReader reader = command.ExecuteReader();
+                            if (reader.Read())
+                            {
+                                ViewBag.msg = reader["msg"];
+                                ViewBag.submitmsg = reader["submitmsg"];//;putInvoicenewa1
+                                if (reader["Saved"].ToString() == "1")
+                                {
+                                    RecordSaved="1";
+                                    ViewBag.SavedStatus = "saved";
+                                    ViewBag.RowID = reader["RowID"];
+                                    df.RowID = reader["RowID"].ToString();
+                                    ViewBag.YourCompany = reader["YourCompany"];
+                                    ViewBag.WSGRRefnumber = reader["WSGRRefnumber"];
+                                    
+                                    ViewBag.UserName = UserID;
+                                    ViewBag.ApplicationNo = reader["ApplicationNo"];
+                                    ViewBag.InvoiceDate = reader["InvoiceDate"];
+                                    ViewBag.USDAmount = double.Parse(reader["USDAmount"].ToString()).ToString("n2");  
+  
+                                    string selectedAtty1 = "";
+                                    string selectedAtty2 = "";
+                                    string selectedAtty3 = "";
+                                   
+                                    using (SqlConnection connection2 = new SqlConnection(ConnectionString))
+                                    {
+
+                                        SqlCommand command2 = new SqlCommand("exec AllUSers ", connection2);
+                                        connection2.Open();
+                                        SqlDataReader RecordSet2 = command2.ExecuteReader(CommandBehavior.CloseConnection);
+                                        while (RecordSet2.Read())
+                                        {
+
+                                            employees = employees + "<option value=\"" + RecordSet2["EmployeeCode"].ToString() + "\">" + RecordSet2["EmployeeName"].ToString() + "</options>";
+
+                                        }
+                                    }
+        
+                                }     
+                                
+                	}
+}
+}
